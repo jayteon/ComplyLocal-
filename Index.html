@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NYC Food Waste Compliance Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f8fafc; color: #1e293b; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        header { background: #1e293b; color: white; padding: 20px; text-align: center; }
+        nav { background: #1e293b; padding: 10px 0; }
+        nav ul { list-style: none; padding: 0; margin: 0; display: flex; justify-content: center; flex-wrap: wrap; }
+        nav ul li { margin: 10px 20px; }
+        nav ul li a { color: white; text-decoration: none; font-weight: bold; cursor: pointer; }
+        nav ul li a:hover { color: #10b981; }
+        .section { display: none; padding: 20px 0; }
+        .section.active { display: block; }
+        .card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .status-green { background: #10b981; color: white; }
+        .status-amber { background: #f59e0b; color: white; }
+        .btn { background: #10b981; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn:hover { background: #059669; }
+        .warning { color: #f59e0b; font-weight: bold; }
+        form { display: grid; gap: 15px; max-width: 500px; }
+        input, select, button { padding: 10px; border: 1px solid #e2e8f0; border-radius: 4px; }
+        .timeline { list-style: none; padding: 0; }
+        .timeline li { margin-bottom: 10px; padding: 10px; border-left: 4px solid #10b981; background: #f1f5f9; }
+        .chart-placeholder { height: 250px; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-style: italic; border-radius: 8px; }
+        #logs-list { margin-top: 20px; }
+        .note { font-size: 0.9em; color: #64748b; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>NYC Food Waste Compliance Tracker</h1>
+        <p>Help avoid DSNY fines ($250–$1,000+) — Track organics separation, diversion & trends for restaurants</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a onclick="showSection('dashboard')">Dashboard</a></li>
+            <li><a onclick="showSection('logging')">Waste Logging</a></li>
+            <li><a onclick="showSection('reports')">Reports & Exports</a></li>
+            <li><a onclick="showSection('analytics')">Analytics</a></li>
+            <li><a onclick="showSection('settings')">Settings</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <section id="dashboard" class="section active">
+            <h2>Dashboard</h2>
+            <div class="card status-green">
+                <h3>Compliance Status</h3>
+                <p>Organics separation appears on track. Keep logging to stay audit-ready.</p>
+            </div>
+            <div class="card status-amber">
+                <h3>Alerts</h3>
+                <p class="warning">Reminder: Check if your restaurant meets DSNY thresholds (e.g., ≥7,000 sq ft for many food services). Non-compliance risks fines.</p>
+            </div>
+            <div class="card">
+                <h3>Key Reminders (Local Law 146 / DSNY Rules)</h3>
+                <ul class="timeline">
+                    <li>Use rigid bins with tight lids for food/organics set-out</li>
+                    <li>Separate food scraps & soiled paper from trash</li>
+                    <li>Work with private carter for organics diversion</li>
+                    <li>Track internally — helps prove compliance & cut costs</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Quick Actions</h3>
+                <button class="btn" onclick="showSection('logging')">Log Today's Waste</button>
+                <button class="btn" onclick="showSection('reports')">Export Summary</button>
+            </div>
+        </section>
+
+        <section id="logging" class="section">
+            <h2>Food Waste Logging</h2>
+            <div class="card">
+                <h3>Daily Entry (lbs)</h3>
+                <form id="wasteForm">
+                    <label>Date:</label>
+                    <input type="date" id="date" required>
+
+                    <label>Prep Waste (lbs):</label>
+                    <input type="number" id="prep" min="0" step="0.1" required>
+
+                    <label>Plate/Guest Waste (lbs):</label>
+                    <input type="number" id="plate" min="0" step="0.1" required>
+
+                    <label>Spoilage (lbs):</label>
+                    <input type="number" id="spoilage" min="0" step="0.1" required>
+
+                    <label>Diverted Organics (lbs):</label>
+                    <input type="number" id="diverted" min="0" step="0.1" required>
+
+                    <label>Diversion Method:</label>
+                    <select id="method">
+                        <option>Private Carter Pickup</option>
+                        <option>On-site Compost</option>
+                        <option>Other</option>
+                    </select>
+
+                    <button type="submit" class="btn">Save Log</button>
+                </form>
+                <div id="logs-list"></div>
+            </div>
+            <p class="note">Data saved locally in browser (for demo). In a real app, use secure backend storage.</p>
+        </section>
+
+        <section id="reports" class="section">
+            <h2>Reports & Exports</h2>
+            <div class="card">
+                <h3>Generate Summary</h3>
+                <p>Create DSNY-ready export (totals by category, dates) for audits or carter records.</p>
+                <button class="btn">Generate Monthly Summary (CSV/PDF placeholder)</button>
+            </div>
+            <div class="card">
+                <h3>Recent Exports</h3>
+                <ul>
+                    <li>January 2026 Summary — Exported Feb 10 <a href="#">Download</a></li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="analytics" class="section">
+            <h2>Analytics</h2>
+            <div class="card">
+                <h3>Waste Trends</h3>
+                <p>Spot reductions in prep/plate waste to save money.</p>
+                <div class="chart-placeholder">Chart: Monthly Totals (Prep, Plate, Spoilage, Diverted) – Placeholder (use Chart.js in production)</div>
+                <p>Insight: Diverted organics up 12% this quarter — great job!</p>
+            </div>
+        </section>
+
+        <section id="settings" class="section">
+            <h2>Settings</h2>
+            <div class="card">
+                <h3>Restaurant Profile</h3>
+                <form>
+                    <label>Restaurant Name:</label>
+                    <input type="text" required>
+
+                    <label>Approx. Sq Ft:</label>
+                    <input type="number" required placeholder="Helps check DSNY threshold">
+
+                    <label>Email for Reminders:</label>
+                    <input type="email" required>
+
+                    <button type="submit" class="btn">Save</button>
+                </form>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        // Basic localStorage logging demo
+        const form = document.getElementById('wasteForm');
+        const logsList = document.getElementById('logs-list');
+
+        function loadLogs() {
+            const logs = JSON.parse(localStorage.getItem('wasteLogs') || '[]');
+            logsList.innerHTML = '<h4>Recent Logs</h4>' + (logs.length ? logs.map(log => `<p>${log.date}: ${log.total} lbs total (${log.diverted} diverted)</p>`).join('') : '<p>No logs yet.</p>');
+        }
+
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+            const log = {
+                date: document.getElementById('date').value,
+                prep: parseFloat(document.getElementById('prep').value),
+                plate: parseFloat(document.getElementById('plate').value),
+                spoilage: parseFloat(document.getElementById('spoilage').value),
+                diverted: parseFloat(document.getElementById('diverted').value),
+                method: document.getElementById('method').value,
+                total: (parseFloat(document.getElementById('prep').value) + parseFloat(document.getElementById('plate').value) + parseFloat(document.getElementById('spoilage').value)).toFixed(1)
+            };
+            let logs = JSON.parse(localStorage.getItem('wasteLogs') || '[]');
+            logs.push(log);
+            localStorage.setItem('wasteLogs', JSON.stringify(logs));
+            alert('Log saved!');
+            form.reset();
+            loadLogs();
+        });
+
+        loadLogs();
+    </script>
+</body>
+</html>
