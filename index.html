@@ -3,52 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NYC Food Waste Compliance Dashboard</title>
+    <title>ComplyLocal – NYC Food Waste Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* Global styles */
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: Arial, Helvetica, sans-serif; background: #f9fafb; color: #1f2937; line-height: 1.5; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        header { background: #1e40af; color: white; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; }
-        header .logo { font-size: 1.2rem; font-weight: bold; }
-        nav ul { list-style: none; display: flex; gap: 20px; }
-        nav a { color: white; text-decoration: none; font-weight: 500; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; color: #111827; }
+        header { background: linear-gradient(to right, #1e40af, #3b82f6); color: white; padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.5rem; font-weight: bold; }
+        nav ul { display: flex; gap: 1.5rem; list-style: none; }
+        nav a { color: white; text-decoration: none; font-weight: 500; cursor: pointer; }
         nav a:hover { text-decoration: underline; }
-
-        /* Dashboard title */
-        .dashboard-title { text-align: center; margin: 20px 0; color: #1e40af; }
-
-        /* Cards grid */
-        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .card { background: white; border-radius: 8px; padding: 20px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .card i { font-size: 2rem; margin-bottom: 10px; color: #10b981; } /* Assuming icon font like FontAwesome */
-        .card h3 { margin-bottom: 10px; }
-        .card button { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
-        .card button:hover { background: #2563eb; }
-
-        /* Compliance status */
-        .compliance { background: #d1fae5; border-radius: 8px; padding: 20px; margin-bottom: 20px; text-align: center; }
-        .compliance h2 { color: #047857; }
-        .compliance p { color: #065f46; }
-
-        /* Metrics grid */
-        .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .metric { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .metric h3 { margin-bottom: 5px; }
-        .metric .value { font-size: 2rem; font-weight: bold; }
-        .metric .sub { font-size: 0.8rem; color: #6b7280; }
-
-        /* Recent activity */
-        .recent-activity { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .recent-activity h2 { margin-bottom: 10px; }
-        .entry { border-bottom: 1px solid #e5e7eb; padding: 10px 0; display: flex; justify-content: space-between; }
-        .entry:last-child { border-bottom: none; }
-
-        /* Log form (hidden by default) */
-        #log-form { display: none; background: white; border-radius: 8px; padding: 20px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        #log-form input { display: block; width: 100%; margin-bottom: 10px; padding: 10px; border: 1px solid #d1d5db; border-radius: 5px; }
-        #log-form button { background: #10b981; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; }
-        #log-form button:hover { background: #059669; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+        h1 { text-align: center; color: #1e40af; margin: 1.5rem 0; }
+        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
+        .card { background: white; border-radius: 12px; padding: 1.5rem; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: transform 0.2s; }
+        .card:hover { transform: translateY(-5px); }
+        .card i { font-size: 2.5rem; color: #10b981; margin-bottom: 0.75rem; }
+        .card button { background: #10b981; color: white; border: none; padding: 0.75rem 1.25rem; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .card button:hover { background: #059669; }
+        .compliance { background: #ecfdf5; border: 2px solid #10b981; border-radius: 12px; padding: 1.5rem; text-align: center; margin-bottom: 2rem; }
+        .compliance.good { border-color: #10b981; background: #ecfdf5; }
+        .compliance.warning { border-color: #f59e0b; background: #fffbeb; }
+        .compliance i { font-size: 3rem; margin-bottom: 0.5rem; }
+        .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
+        .metric { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); text-align: center; }
+        .metric .value { font-size: 2.5rem; font-weight: bold; color: #1e40af; }
+        .metric .sub { color: #6b7280; font-size: 0.95rem; }
+        #chart-container { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+        #log-form { display: none; background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+        #log-form input { width: 100%; padding: 0.75rem; margin-bottom: 1rem; border: 1px solid #d1d5db; border-radius: 6px; }
+        #log-form button { background: #10b981; color: white; border: none; padding: 0.75rem; border-radius: 6px; cursor: pointer; width: 100%; font-weight: 600; }
+        .recent { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .entry { display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #e5e7eb; }
+        .pro-banner { background: #fef3c7; border-radius: 12px; padding: 1.25rem; text-align: center; margin: 2rem 0; border: 2px dashed #d97706; }
+        .pro-banner button { background: #d97706; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-size: 1.1rem; }
+        @media (max-width: 768px) { .cards, .metrics { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -56,135 +46,150 @@
         <div class="logo">ComplyLocal</div>
         <nav>
             <ul>
-                <li><a href="#">Dashboard</a></li>
-                <li><a href="#" id="log-waste">Log Waste</a></li>
-                <li><a href="#">Reports</a></li>
-                <li><a href="#">Analytics</a></li>
-                <li><a href="#">Settings</a></li>
+                <li><a onclick="showSection('dashboard')">Dashboard</a></li>
+                <li><a id="log-waste">Log Waste</a></li>
+                <li><a onclick="exportCSV()">Export Report</a></li>
+                <li><a>Analytics</a></li>
+                <li><a>Settings</a></li>
             </ul>
         </nav>
     </header>
 
-    <div class="container">
-        <h1 class="dashboard-title">Your Restaurant<br>NYC Food Waste Compliance Dashboard</h1>
+    <div class="container" id="dashboard">
+        <h1>NYC Food Waste Compliance Dashboard</h1>
 
-        <!-- Quick action cards -->
+        <div class="pro-banner">
+            <h2>Go Pro for Unlimited Logs + PDF Exports + Multi-User</h2>
+            <p>Just $10/month – Avoid fines & prove compliance easily. Coming soon!</p>
+            <button>Upgrade to Pro ($10/mo)</button>
+        </div>
+
         <div class="cards">
-            <div class="card">
-                <i>+</i>
-                <h3>Log Waste</h3>
-                <p>Log daily waste</p>
-                <button id="open-log-form">Log Now</button>
-            </div>
-            <div class="card">
-                <i>📄</i>
-                <h3>Generate Report</h3>
-                <p>Generate compliance report</p>
-                <button>Generate</button>
-            </div>
-            <div class="card">
-                <i>📊</i>
-                <h3>Analytics</h3>
-                <p>View trends</p>
-                <button>View</button>
-            </div>
-            <div class="card">
-                <i>⚙️</i>
-                <h3>Settings</h3>
-                <p>Restaurant profile</p>
-                <button>Edit</button>
-            </div>
+            <div class="card"><i class="fas fa-plus-circle"></i><h3>Log Waste</h3><button id="open-log">Log Today</button></div>
+            <div class="card"><i class="fas fa-file-export"></i><h3>Generate Report</h3><button onclick="exportCSV()">Export CSV</button></div>
+            <div class="card"><i class="fas fa-chart-line"></i><h3>Analytics</h3><button>View Trends</button></div>
+            <div class="card"><i class="fas fa-cog"></i><h3>Settings</h3><button>Edit Profile</button></div>
         </div>
 
-        <!-- Compliance status -->
-        <div class="compliance">
-            <i>✅</i>
-            <h2>Compliant</h2>
-            <p>Next Report: Not set</p>
+        <div id="compliance-card" class="compliance">
+            <i class="fas fa-shield-check"></i>
+            <h2 id="status">Loading...</h2>
+            <p id="status-detail">Next report: Not set</p>
         </div>
 
-        <!-- Metrics -->
         <div class="metrics">
-            <div class="metric">
-                <h3>Waste This Month</h3>
-                <div class="value" id="waste-month">2 lbs</div>
-                <div class="sub">vs last month</div>
-            </div>
-            <div class="metric">
-                <h3>Diversion Rate</h3>
-                <div class="value" id="diversion-rate">0%</div>
-                <div class="sub">diverted</div>
-            </div>
-            <div class="metric">
-                <h3>Reports Filed</h3>
-                <div class="value" id="reports-filed">0</div>
-                <div class="sub">total</div>
-            </div>
+            <div class="metric"><h3>Total Waste (This Month)</h3><div class="value" id="waste-month">0 lbs</div><div class="sub">vs last month</div></div>
+            <div class="metric"><h3>Diversion Rate</h3><div class="value" id="diversion-rate">0%</div><div class="sub">organics diverted</div></div>
+            <div class="metric"><h3>Logs This Month</h3><div class="value" id="logs-count">0</div><div class="sub">entries</div></div>
         </div>
 
-        <!-- Log form -->
+        <div id="chart-container">
+            <canvas id="wasteChart"></canvas>
+        </div>
+
         <div id="log-form">
-            <h3>Log Today's Waste</h3>
-            <input type="date" id="log-date" value="2026-02-19">
-            <input type="number" id="total-lbs" placeholder="Total lbs">
-            <input type="number" id="landfill-lbs" placeholder="Landfill lbs">
-            <button id="submit-log">Submit</button>
+            <h3>Log Daily Waste</h3>
+            <input type="date" id="log-date" required>
+            <input type="number" id="total-lbs" placeholder="Total waste (lbs)" min="0" step="0.1" required>
+            <input type="number" id="diverted-lbs" placeholder="Diverted/Organics (lbs)" min="0" step="0.1" required>
+            <button id="submit-log">Save Log</button>
         </div>
 
-        <!-- Recent activity -->
-        <div class="recent-activity">
-            <h2>Recent Activity</h2>
-            <h3>Recent Entries</h3>
-            <div class="entry">
-                <div>Tuesday, Feb 17</div>
-                <div>1.0 lbs total</div>
-                <div>0.0 lbs landfill</div>
-            </div>
-            <div class="entry">
-                <div>Tuesday, Feb 17</div>
-                <div>1.0 lbs total</div>
-                <div>0.0 lbs landfill</div>
-            </div>
+        <div class="recent">
+            <h2>Recent Logs</h2>
+            <div id="recent-entries"></div>
         </div>
     </div>
 
     <script>
-        // Basic JS for interactivity
-        const openLogBtn = document.getElementById('open-log-form');
-        const logWasteLink = document.getElementById('log-waste');
-        const logForm = document.getElementById('log-form');
-        const submitLog = document.getElementById('submit-log');
-        const wasteMonth = document.getElementById('waste-month');
-        const diversionRate = document.getElementById('diversion-rate');
+        let logs = JSON.parse(localStorage.getItem('wasteLogs')) || [];
+        let chart;
 
-        // Show log form
-        const showLogForm = () => { logForm.style.display = 'block'; };
-        openLogBtn.addEventListener('click', showLogForm);
-        logWasteLink.addEventListener('click', (e) => { e.preventDefault(); showLogForm(); });
+        function saveLogs() { localStorage.setItem('wasteLogs', JSON.stringify(logs)); updateDashboard(); }
 
-        // Submit log (client-side update)
-        submitLog.addEventListener('click', () => {
+        function updateDashboard() {
+            const now = new Date();
+            const thisMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+            const monthLogs = logs.filter(log => log.date.startsWith(thisMonth));
+
+            const total = monthLogs.reduce((sum, log) => sum + log.total, 0);
+            const diverted = monthLogs.reduce((sum, log) => sum + log.diverted, 0);
+            const rate = total > 0 ? Math.round((diverted / total) * 100) : 0;
+
+            document.getElementById('waste-month').textContent = total.toFixed(1) + ' lbs';
+            document.getElementById('diversion-rate').textContent = rate + '%';
+            document.getElementById('logs-count').textContent = monthLogs.length;
+
+            const statusEl = document.getElementById('status');
+            const detailEl = document.getElementById('status-detail');
+            const card = document.getElementById('compliance-card');
+            if (rate >= 80) { 
+                statusEl.textContent = 'Compliant'; 
+                card.className = 'compliance good'; 
+                detailEl.textContent = 'Great job – keep it up!';
+            } else if (rate >= 50) { 
+                statusEl.textContent = 'At Risk'; 
+                card.className = 'compliance warning'; 
+                detailEl.textContent = 'Improve diversion to stay safe';
+            } else { 
+                statusEl.textContent = 'Non-Compliant'; 
+                card.className = 'compliance'; 
+                detailEl.textContent = 'Action needed – check DSNY rules';
+            }
+
+            // Recent entries
+            const recentDiv = document.getElementById('recent-entries');
+            recentDiv.innerHTML = '';
+            logs.slice(-5).reverse().forEach(log => {
+                const div = document.createElement('div');
+                div.className = 'entry';
+                div.innerHTML = `<span>${log.date}: ${log.total} lbs total (${log.diverted} diverted)</span><span>${(log.diverted / log.total * 100 || 0).toFixed(0)}%</span>`;
+                recentDiv.appendChild(div);
+            });
+
+            // Update chart
+            const dates = [...new Set(logs.map(l => l.date))].sort().slice(-30);
+            const totals = dates.map(d => logs.filter(l => l.date === d).reduce((s, l) => s + l.total, 0));
+            const divertedData = dates.map(d => logs.filter(l => l.date === d).reduce((s, l) => s + l.diverted, 0));
+
+            if (chart) chart.destroy();
+            chart = new Chart(document.getElementById('wasteChart'), {
+                type: 'bar',
+                data: { labels: dates, datasets: [{ label: 'Total Waste', data: totals, backgroundColor: '#3b82f6' }, { label: 'Diverted', data: divertedData, backgroundColor: '#10b981' }] },
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        function exportCSV() {
+            if (logs.length === 0) return alert('No logs to export!');
+            let csv = 'Date,Total lbs,Diverted lbs,Diversion %\n';
+            logs.forEach(log => {
+                csv += `${log.date},${log.total},${log.diverted},${(log.diverted / log.total * 100 || 0).toFixed(2)}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'waste-report.csv'; a.click();
+        }
+
+        // Event listeners
+        document.getElementById('open-log').onclick = document.getElementById('log-waste').onclick = () => {
+            document.getElementById('log-form').style.display = 'block';
+        };
+
+        document.getElementById('submit-log').onclick = () => {
+            const date = document.getElementById('log-date').value;
             const total = parseFloat(document.getElementById('total-lbs').value) || 0;
-            const landfill = parseFloat(document.getElementById('landfill-lbs').value) || 0;
-            const diverted = total - landfill;
-            const currentWaste = parseFloat(wasteMonth.textContent) || 0;
-            wasteMonth.textContent = (currentWaste + total) + ' lbs';
-            diversionRate.textContent = total > 0 ? Math.round((diverted / total) * 100) + '%' : '0%';
+            const diverted = parseFloat(document.getElementById('diverted-lbs').value) || 0;
+            if (!date || total < 0 || diverted < 0 || diverted > total) return alert('Check your inputs!');
+            logs.push({ date, total, diverted });
+            saveLogs();
+            document.getElementById('log-form').style.display = 'none';
+            alert('Logged! Data saved in your browser.');
+        };
 
-            // Add to recent activity (demo)
-            const recent = document.querySelector('.recent-activity');
-            const newEntry = document.createElement('div');
-            newEntry.classList.add('entry');
-            newEntry.innerHTML = `
-                <div>${document.getElementById('log-date').value}</div>
-                <div>${total} lbs total</div>
-                <div>${landfill} lbs landfill</div>
-            `;
-            recent.appendChild(newEntry);
-
-            logForm.style.display = 'none';
-            alert('Waste logged! (This is client-side only – add a backend for real storage.)');
-        });
+        // Init
+        updateDashboard();
     </script>
 </body>
 </html>
