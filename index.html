@@ -1,3 +1,97 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ComplyLocal – NYC Food Waste Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; color: #111827; }
+        header { background: linear-gradient(to right, #1e40af, #3b82f6); color: white; padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.5rem; font-weight: bold; }
+        nav ul { display: flex; gap: 1.5rem; list-style: none; }
+        nav a { color: white; text-decoration: none; font-weight: 500; cursor: pointer; }
+        nav a:hover { text-decoration: underline; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+        h1 { text-align: center; color: #1e40af; margin: 1.5rem 0; }
+        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
+        .card { background: white; border-radius: 12px; padding: 1.5rem; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: transform 0.2s; }
+        .card:hover { transform: translateY(-5px); }
+        .card i { font-size: 2.5rem; color: #10b981; margin-bottom: 0.75rem; }
+        .card button { background: #10b981; color: white; border: none; padding: 0.75rem 1.25rem; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .card button:hover { background: #059669; }
+        .compliance { background: #ecfdf5; border: 2px solid #10b981; border-radius: 12px; padding: 1.5rem; text-align: center; margin-bottom: 2rem; }
+        .compliance.good { border-color: #10b981; background: #ecfdf5; }
+        .compliance.warning { border-color: #f59e0b; background: #fffbeb; }
+        .compliance i { font-size: 3rem; margin-bottom: 0.5rem; }
+        .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
+        .metric { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); text-align: center; }
+        .metric .value { font-size: 2.5rem; font-weight: bold; color: #1e40af; }
+        .metric .sub { color: #6b7280; font-size: 0.95rem; }
+        #chart-container { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+        #log-form { display: none; background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+        #log-form input { width: 100%; padding: 0.75rem; margin-bottom: 1rem; border: 1px solid #d1d5db; border-radius: 6px; }
+        #log-form button { background: #10b981; color: white; border: none; padding: 0.75rem; border-radius: 6px; cursor: pointer; width: 100%; font-weight: 600; }
+        .recent { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .entry { display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #e5e7eb; }
+        .pro-banner { background: #fef3c7; border-radius: 12px; padding: 1.25rem; text-align: center; margin: 2rem 0; border: 2px dashed #d97706; }
+        .pro-banner .buttons { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-top: 1rem; }
+        .pro-banner button { background: #d97706; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-size: 1.1rem; text-decoration: none; }
+        .pro-banner button:hover { background: #b45309; }
+        .pro-banner .paypal { background: #0070ba; }
+        .pro-banner .paypal:hover { background: #005ea6; }
+        #success-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; }
+        .success-content { background: white; padding: 2rem; border-radius: 12px; text-align: center; max-width: 500px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .success-content i { font-size: 5rem; color: #10b981; margin-bottom: 0.5rem; }
+        .success-content h2 { color: #047857; }
+        .success-content p { margin: 1rem 0; font-size: 1.1rem; }
+        .pro-unlocked { background: #d1fae5; border: 2px solid #10b981; border-radius: 8px; padding: 1rem; margin: 1rem 0; font-weight: bold; }
+        @media (max-width: 768px) { .cards, .metrics { grid-template-columns: 1fr; } .pro-banner .buttons { flex-direction: column; gap: 0.75rem; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">ComplyLocal</div>
+        <nav>
+            <ul>
+                <li><a onclick="showSection('dashboard')">Dashboard</a></li>
+                <li><a id="log-waste">Log Waste</a></li>
+                <li><a onclick="exportCSV()">Export Report</a></li>
+                <li><a>Analytics</a></li>
+                <li><a>Settings</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container" id="dashboard">
+        <h1>NYC Food Waste Compliance Dashboard</h1>
+
+        <div class="pro-banner">
+            <h2>Go Pro for Unlimited Logs + PDF Exports + More</h2>
+            <p>Just $10/month – Stay compliant & save time. Cancel anytime.</p>
+            <div class="buttons">
+                <button class="paypal" onclick="showSuccess()">Upgrade to Pro ($10/mo) via PayPal</button>
+                <button onclick="showSuccess()">Upgrade to Pro ($10/mo) via Stripe</button>
+            </div>
+        </div>
+
+        <div class="cards">
+            <div class="card"><i class="fas fa-plus-circle"></i><h3>Log Waste</h3><button id="open-log">Log Today</button></div>
+            <div class="card"><i class="fas fa-file-export"></i><h3>Generate Report</h3><button onclick="exportCSV()">Export CSV</button></div>
+            <div class="card"><i class="fas fa-chart-line"></i><h3>Analytics</h3><button>View Trends</button></div>
+            <div class="card"><i class="fas fa-cog"></i><h3>Settings</h3><button>Edit Profile</button></div>
+        </div>
+
+        <div id="compliance-card" class="compliance">
+            <i class="fas fa-shield-check"></i>
+            <h2 id="status">Loading...</h2>
+            <p id="status-detail">Next report: Not set</p>
+        </div>
+
         <div class="metrics">
             <div class="metric"><h3>Total Waste (This Month)</h3><div class="value" id="waste-month">0 lbs</div><div class="sub">vs last month</div></div>
             <div class="metric"><h3>Diversion Rate</h3><div class="value" id="diversion-rate">0%</div><div class="sub">organics diverted</div></div>
@@ -21,9 +115,16 @@
             <h2>Recent Logs</h2>
             <div id="recent-entries"></div>
         </div>
+    </div>
 
-        <!-- Simulate Pro for testing (remove or hide later) -->
-        <button id="simulate-pro" style="margin: 20px auto; display: block;">Simulate Pro Unlock (Test Only)</button>
+    <div id="success-overlay" style="display:none;">
+        <div class="success-content">
+            <i class="fas fa-check-circle"></i>
+            <h2>Purchase Successful!</h2>
+            <p>Your $10/month subscription is active. Pro features unlocked!</p>
+            <div class="pro-unlocked">Now you have unlimited logs, PDF exports, and more.</div>
+            <button onclick="closeSuccess()">Close</button>
+        </div>
     </div>
 
     <script>
@@ -31,8 +132,18 @@
         let chart;
         let isPro = localStorage.getItem('isPro') === 'true';
 
-        function saveLogs() { localStorage.setItem('wasteLogs', JSON.stringify(logs)); updateDashboard(); }
+        function showSuccess() {
+            document.getElementById('success-overlay').style.display = 'flex';
+            isPro = true;
+            localStorage.setItem('isPro', 'true');
+            updateProFeatures();
+        }
 
+        function closeSuccess() {
+            document.getElementById('success-overlay').style.display = 'none';
+        }
+
+        // Rest of script (updateDashboard, exportCSV, updateProFeatures, export-pdf onclick, log form events, init) is the same as your original real version
         function updateDashboard() {
             const now = new Date();
             const thisMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
@@ -100,6 +211,8 @@
             document.getElementById('export-pdf').disabled = !isPro;
             if (!isPro) {
                 document.getElementById('wasteChart').style.opacity = 0.5;
+            } else {
+                document.getElementById('wasteChart').style.opacity = 1;
             }
         }
 
@@ -107,20 +220,14 @@
             if (!isPro) return alert('Upgrade to Pro for PDF exports!');
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            doc.text('NYC Food Waste Report - ComplyLocal Pro', 10, 10);
-            doc.text(`Total Waste This Month: ${document.getElementById('waste-month').textContent}`, 10, 20);
+            doc.text('NYC Food Waste Report', 10, 10);
+            doc.text(`Total Waste: ${document.getElementById('waste-month').textContent}`, 10, 20);
             doc.text(`Diversion Rate: ${document.getElementById('diversion-rate').textContent}`, 10, 30);
             logs.forEach((log, i) => doc.text(`${log.date}: ${log.total} lbs (${log.diverted} diverted)`, 10, 40 + i*10));
-            doc.save('complylocal-report.pdf');
+            doc.save('waste-report.pdf');
         };
 
-        document.getElementById('simulate-pro').onclick = () => {
-            isPro = true;
-            localStorage.setItem('isPro', 'true');
-            updateProFeatures();
-            alert('Pro unlocked for testing!');
-        };
-
+        // Log form
         document.getElementById('open-log').onclick = document.getElementById('log-waste').onclick = () => {
             document.getElementById('log-form').style.display = 'block';
         };
@@ -136,6 +243,7 @@
             alert('Logged!');
         };
 
+        // Init
         updateDashboard();
         updateProFeatures();
     </script>
