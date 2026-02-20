@@ -6,6 +6,7 @@
     <title>ComplyLocal – NYC Food Waste Tracker</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; color: #111827; }
@@ -37,8 +38,12 @@
         .recent { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
         .entry { display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #e5e7eb; }
         .pro-banner { background: #fef3c7; border-radius: 12px; padding: 1.25rem; text-align: center; margin: 2rem 0; border: 2px dashed #d97706; }
-        .pro-banner button { background: #d97706; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-size: 1.1rem; }
-        @media (max-width: 768px) { .cards, .metrics { grid-template-columns: 1fr; } }
+        .pro-banner .buttons { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-top: 1rem; }
+        .pro-banner button { background: #d97706; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-size: 1.1rem; text-decoration: none; }
+        .pro-banner button:hover { background: #b45309; }
+        .pro-banner .paypal { background: #0070ba; }
+        .pro-banner .paypal:hover { background: #005ea6; }
+        @media (max-width: 768px) { .cards, .metrics { grid-template-columns: 1fr; } .pro-banner .buttons { flex-direction: column; gap: 0.75rem; } }
     </style>
 </head>
 <body>
@@ -59,9 +64,19 @@
         <h1>NYC Food Waste Compliance Dashboard</h1>
 
         <div class="pro-banner">
-            <h2>Go Pro for Unlimited Logs + PDF Exports + Multi-User</h2>
-            <p>Just $10/month – Avoid fines & prove compliance easily. Coming soon!</p>
-            <button>Upgrade to Pro ($10/mo)</button>
+            <h2>Go Pro for Unlimited Logs + PDF Exports + More</h2>
+            <p>Just $10/month – Stay compliant & save time. Cancel anytime.</p>
+            <div class="buttons">
+                <!-- PayPal first, as requested -->
+                <a href="https://www.paypal.com/ncp/payment/XMMZTBEGL66RC" target="_blank" rel="noopener noreferrer">
+                    <button class="paypal">Upgrade to Pro ($10/mo) via PayPal</button>
+                </a>
+
+                <!-- Stripe second -->
+                <a href="https://buy.stripe.com/3cI8wQfzX0ht9Rb9o19bO02" target="_blank" rel="noopener noreferrer">
+                    <button>Upgrade to Pro ($10/mo) via Stripe</button>
+                </a>
+            </div>
         </div>
 
         <div class="cards">
@@ -81,6 +96,7 @@
             <div class="metric"><h3>Total Waste (This Month)</h3><div class="value" id="waste-month">0 lbs</div><div class="sub">vs last month</div></div>
             <div class="metric"><h3>Diversion Rate</h3><div class="value" id="diversion-rate">0%</div><div class="sub">organics diverted</div></div>
             <div class="metric"><h3>Logs This Month</h3><div class="value" id="logs-count">0</div><div class="sub">entries</div></div>
+            <div class="metric"><h3>Export Report</h3><button id="export-pdf" disabled>PDF (Pro Only)</button></div>
         </div>
 
         <div id="chart-container">
@@ -99,11 +115,15 @@
             <h2>Recent Logs</h2>
             <div id="recent-entries"></div>
         </div>
+
+        <!-- Simulate Pro for testing (remove or hide later) -->
+        <button id="simulate-pro" style="margin: 20px auto; display: block;">Simulate Pro Unlock (Test Only)</button>
     </div>
 
     <script>
         let logs = JSON.parse(localStorage.getItem('wasteLogs')) || [];
         let chart;
+        let isPro = localStorage.getItem('isPro') === 'true';
 
         function saveLogs() { localStorage.setItem('wasteLogs', JSON.stringify(logs)); updateDashboard(); }
 
@@ -137,7 +157,6 @@
                 detailEl.textContent = 'Action needed – check DSNY rules';
             }
 
-            // Recent entries
             const recentDiv = document.getElementById('recent-entries');
             recentDiv.innerHTML = '';
             logs.slice(-5).reverse().forEach(log => {
@@ -147,7 +166,6 @@
                 recentDiv.appendChild(div);
             });
 
-            // Update chart
             const dates = [...new Set(logs.map(l => l.date))].sort().slice(-30);
             const totals = dates.map(d => logs.filter(l => l.date === d).reduce((s, l) => s + l.total, 0));
             const divertedData = dates.map(d => logs.filter(l => l.date === d).reduce((s, l) => s + l.diverted, 0));
@@ -172,7 +190,31 @@
             a.href = url; a.download = 'waste-report.csv'; a.click();
         }
 
-        // Event listeners
+        function updateProFeatures() {
+            document.getElementById('export-pdf').disabled = !isPro;
+            if (!isPro) {
+                document.getElementById('wasteChart').style.opacity = 0.5;
+            }
+        }
+
+        document.getElementById('export-pdf').onclick = () => {
+            if (!isPro) return alert('Upgrade to Pro for PDF exports!');
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text('NYC Food Waste Report - ComplyLocal Pro', 10, 10);
+            doc.text(`Total Waste This Month: ${document.getElementById('waste-month').textContent}`, 10, 20);
+            doc.text(`Diversion Rate: ${document.getElementById('diversion-rate').textContent}`, 10, 30);
+            logs.forEach((log, i) => doc.text(`${log.date}: ${log.total} lbs (${log.diverted} diverted)`, 10, 40 + i*10));
+            doc.save('complylocal-report.pdf');
+        };
+
+        document.getElementById('simulate-pro').onclick = () => {
+            isPro = true;
+            localStorage.setItem('isPro', 'true');
+            updateProFeatures();
+            alert('Pro unlocked for testing!');
+        };
+
         document.getElementById('open-log').onclick = document.getElementById('log-waste').onclick = () => {
             document.getElementById('log-form').style.display = 'block';
         };
@@ -181,15 +223,15 @@
             const date = document.getElementById('log-date').value;
             const total = parseFloat(document.getElementById('total-lbs').value) || 0;
             const diverted = parseFloat(document.getElementById('diverted-lbs').value) || 0;
-            if (!date || total < 0 || diverted < 0 || diverted > total) return alert('Check your inputs!');
+            if (!date || total < 0 || diverted < 0 || diverted > total) return alert('Check inputs!');
             logs.push({ date, total, diverted });
             saveLogs();
             document.getElementById('log-form').style.display = 'none';
-            alert('Logged! Data saved in your browser.');
+            alert('Logged!');
         };
 
-        // Init
         updateDashboard();
+        updateProFeatures();
     </script>
 </body>
 </html>
